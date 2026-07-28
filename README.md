@@ -1,6 +1,8 @@
 ## 🚀 Project Highlights
 
-<img src="https://shields.io" alt="Python Badge" /> <img src="https://shields.io" alt="FastAPI Badge" /> <img src="https://shields.io" alt="Supabase Badge" />
+![Built with Python](https://shields.io)
+![FastAPI Framework](https://shields.io)
+![Supabase Powered](https://shields.io)
 
 ---
 
