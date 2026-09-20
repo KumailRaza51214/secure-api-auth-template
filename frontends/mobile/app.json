@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "TaskFlow",
+    "slug": "taskflow-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.taskflow.mobile"
+    },
+    "android": {
+      "package": "com.taskflow.mobile"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}

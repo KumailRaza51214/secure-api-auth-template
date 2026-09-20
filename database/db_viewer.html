@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Database Viewer</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1220;
+      --bg-soft: #111a2c;
+      --card: #16213a;
+      --card-2: #1c2946;
+      --border: #243452;
+      --text: #e5ecf7;
+      --muted: #8ea0bd;
+      --primary: #3b82f6;
+      --primary-2: #2563eb;
+      --green: #10b981;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --radius: 14px;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(1000px 500px at 10% -10%, rgba(59, 130, 246, 0.18), transparent 60%),
+        radial-gradient(800px 400px at 110% 10%, rgba(16, 185, 129, 0.12), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 28px 20px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .hidden { display: none !important; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 20px; color: white;
+      box-shadow: 0 8px 22px rgba(59, 130, 246, 0.4);
+    }
+    h1 { margin: 0; font-size: 22px; letter-spacing: 0.2px; }
+    .subtitle { color: var(--muted); font-size: 13px; margin-top: 3px; }
+    .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 16px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); font-weight: 600; font-size: 14px;
+      cursor: pointer; transition: all 0.18s ease; text-decoration: none;
+    }
+    .btn:hover { border-color: var(--primary); background: var(--card-2); transform: translateY(-1px); }
+    .btn.primary { background: linear-gradient(135deg, var(--primary), var(--primary-2)); border: none; color: white; box-shadow: 0 8px 22px rgba(59,130,246,0.35); }
+    .btn.primary:hover { filter: brightness(1.1); }
+    .btn.danger { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+    .btn.danger:hover { background: rgba(239,68,68,0.12); border-color: var(--red); }
+    .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+    .btn.ghost:hover { color: var(--text); background: var(--card-2); }
+
+    .stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px; margin-bottom: 22px;
+    }
+    .stat {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 18px; box-shadow: var(--shadow);
+    }
+    .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; }
+    .stat .value { font-size: 28px; font-weight: 800; margin-top: 6px; }
+    .stat .value.green { color: var(--green); }
+    .stat .value.amber { color: var(--amber); }
+    .stat .value.blue { color: var(--primary); }
+
+    .toolbar {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      background: var(--card); border: 1px solid var(--border);
+      padding: 12px 14px; border-radius: var(--radius); margin-bottom: 16px;
+    }
+    .search {
+      flex: 1; min-width: 220px;
+      background: var(--bg-soft); border: 1px solid var(--border);
+      color: var(--text); padding: 10px 14px; border-radius: 10px; font-size: 14px;
+      outline: none; transition: border 0.2s;
+    }
+    .search:focus { border-color: var(--primary); }
+    .user-filter {
+      background: var(--bg-soft); border: 1px solid var(--border);
+      color: var(--text); padding: 10px 14px; border-radius: 10px; font-size: 14px;
+      outline: none; cursor: pointer;
+    }
+    .auto {
+      display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer;
+      user-select: none;
+    }
+    .auto input { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+
+    .table-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; box-shadow: var(--shadow);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th {
+      text-align: left; padding: 13px 16px; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.7px; color: var(--muted); background: var(--card-2);
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    tbody td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background 0.15s; }
+    tbody tr:hover { background: rgba(59, 130, 246, 0.07); }
+    .id-cell { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .title-cell { font-weight: 600; }
+    .desc-cell { color: var(--muted); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+    }
+    .badge.done { background: rgba(16,185,129,0.15); color: #34d399; }
+    .badge.pending { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .user-cell { color: #a5b4fc; font-weight: 600; }
+    .muted { color: var(--muted); }
+    .time-cell { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+    .del-btn {
+      background: transparent; border: 1px solid rgba(239,68,68,0.35); color: #fca5a5;
+      padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .del-btn:hover { background: rgba(239,68,68,0.15); border-color: var(--red); }
+    .empty {
+      text-align: center; padding: 48px 20px; color: var(--muted);
+    }
+    .empty .big { font-size: 40px; margin-bottom: 8px; }
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(11,18,32,0.55); backdrop-filter: blur(2px);
+      display: flex; align-items: center; justify-content: center; z-index: 50;
+    }
+    .spinner {
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 4px solid var(--card-2); border-top-color: var(--primary);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .toast {
+      position: fixed; top: 20px; right: 20px; z-index: 100;
+      background: var(--card-2); border: 1px solid var(--border);
+      color: var(--text); padding: 13px 18px; border-radius: 12px;
+      box-shadow: var(--shadow); font-size: 14px; font-weight: 600;
+      transform: translateX(120%); transition: transform 0.3s ease; max-width: 320px;
+    }
+    .toast.show { transform: translateX(0); }
+    .toast.success { border-left: 4px solid var(--green); }
+    .toast.error { border-left: 4px solid var(--red); }
+
+    /* ---------- Admin Login ---------- */
+    .login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 80vh;
+    }
+    .login-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 48px 40px;
+      max-width: 420px; width: 100%; text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .login-card .shield {
+      width: 64px; height: 64px; margin: 0 auto 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; box-shadow: 0 12px 28px -8px rgba(245,158,11,0.5);
+    }
+    .login-card h2 { font-size: 24px; margin-bottom: 6px; }
+    .login-card p { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
+    .login-card input {
+      width: 100%; padding: 13px 16px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--bg-soft);
+      color: var(--text); font-size: 15px; outline: none;
+      margin-bottom: 14px; font-family: inherit;
+    }
+    .login-card input:focus { border-color: var(--primary); }
+    .login-card .btn { width: 100%; }
+    .admin-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      background: rgba(245,158,11,0.15); color: #fbbf24;
+      font-size: 12px; font-weight: 700; margin-bottom: 16px;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 16px 10px; }
+      .table-card { overflow-x: auto; }
+      table { min-width: 720px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Admin Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="shield">🔒</div>
+      <h2>Admin Access Only</h2>
+      <p>Sign in with your admin name to view the database.</p>
+      <div class="admin-badge">Authorized: Kumail · Abbas</div>
+      <form id="loginForm" autocomplete="off">
+        <input id="username" type="text" placeholder="Enter admin name" maxlength="100" />
+        <button id="loginBtn" class="btn primary" type="submit">Sign in as Admin</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DB Viewer (hidden until admin logs in) -->
+  <div id="dbView" class="wrap hidden">
+    <header>
+      <div class="brand">
+        <div class="logo">⚡</div>
+        <div>
+          <h1>Database Viewer</h1>
+          <div class="subtitle">Live view of <code>todos.db</code> · SQLite <span class="admin-badge" id="adminBadge">Admin: —</span></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="refresh(true)">🔄 Refresh</button>
+        <button id="logoutBtn" class="btn ghost">Sign out</button>
+      </div>
+    </header>
+
+    <div class="stats">
+      <div class="stat"><div class="label">Total Todos</div><div class="value blue" id="statTotal">–</div></div>
+      <div class="stat"><div class="label">Completed</div><div class="value green" id="statDone">–</div></div>
+      <div class="stat"><div class="label">Pending</div><div class="value amber" id="statPending">–</div></div>
+      <div class="stat"><div class="label">Users</div><div class="value" id="statUsers">–</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input class="search" id="search" placeholder="Search by title, description, or username…" oninput="render()" />
+      <select class="user-filter" id="userFilter" onchange="render()">
+        <option value="">All users</option>
+      </select>
+      <label class="auto">
+        <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()" /> Auto-refresh 5s
+      </label>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Username</th>
+            <th>User ID</th>
+            <th>Created At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="empty" class="empty" style="display:none;">
+        <div class="big">🗂️</div>
+        <div>No todos match your filter.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="overlay" style="display:none;"><div class="spinner"></div></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    'use strict';
+
+    const STORAGE_KEY = 'admin_db_token';
+    let token = localStorage.getItem(STORAGE_KEY) || '';
+    let todos = [];
+    let autoTimer = null;
+
+    // ---------- DOM ----------
+    const $ = id => document.getElementById(id);
+    const loginScreen = $('loginScreen');
+    const dbView = $('dbView');
+
+    function showToast(msg, type) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + type;
+      requestAnimationFrame(() => t.classList.add('show'));
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function setLoading(btn, loading, label) {
+      if (loading) {
+        btn.dataset.label = label;
+        btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;"></span>';
+        btn.disabled = true;
+      } else {
+        btn.innerHTML = btn.dataset.label || label;
+        btn.disabled = false;
+      }
+    }
+
+    // ---------- Auth ----------
+    async function adminLogin(e) {
+      e.preventDefault();
+      const username = $('username').value.trim();
+      if (!username) { showToast('Please enter your admin name.', 'error'); return; }
+      const btn = $('loginBtn');
+      setLoading(btn, true, 'Sign in as Admin');
+      try {
+        const res = await fetch('/auth/admin-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Login failed');
+        token = data.access_token;
+        localStorage.setItem(STORAGE_KEY, token);
+        $('adminBadge').textContent = 'Admin: ' + data.username;
+        loginScreen.classList.add('hidden');
+        dbView.classList.remove('hidden');
+        showToast('Welcome, ' + data.username + '!', 'success');
+        await fetchTodos(true);
+      } catch (err) {
+        showToast('⚠️ ' + err.message, 'error');
+      } finally {
+        setLoading(btn, false, 'Sign in as Admin');
+      }
+    }
+
+    function adminLogout() {
+      token = '';
+      localStorage.removeItem(STORAGE_KEY);
+      todos = [];
+      loginScreen.classList.remove('hidden');
+      dbView.classList.add('hidden');
+      $('username').value = '';
+      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+      $('autoRefresh').checked = false;
+      showToast('Signed out.', 'success');
+    }
+
+    // ---------- API with auth ----------
+    async function apiAdmin(url, options = {}) {
+      const headers = Object.assign({}, options.headers || {});
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      let res;
+      try {
+        res = await fetch(url, Object.assign({}, options, { headers }));
+      } catch (err) {
+        throw new Error('Network error — is the server running?');
+      }
+      let data = null;
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        try { data = await res.json(); } catch (e) { data = null; }
+      }
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          adminLogout();
+          showToast('Session expired — sign in again.', 'error');
+          return Promise.reject(new Error('Unauthorized'));
+        }
+        throw new Error((data && data.detail) || 'Request failed (' + res.status + ')');
+      }
+      return data;
+    }
+
+    // ---------- Data ----------
+    async function fetchTodos(showSpinner) {
+      if (showSpinner) $('overlay').style.display = 'flex';
+      try {
+        const data = await apiAdmin('/api/db/todos', { cache: 'no-store' });
+        todos = data || [];
+        populateUserFilter();
+        render();
+      } catch (err) {
+        if (err.message !== 'Unauthorized') showToast('⚠️ ' + err.message, 'error');
+      } finally {
+        $('overlay').style.display = 'none';
+      }
+    }
+
+    function populateUserFilter() {
+      const sel = $('userFilter');
+      const current = sel.value;
+      const users = [...new Set(todos.map(t => t.username || '(none)'))].sort();
+      sel.innerHTML = '<option value="">All users</option>' +
+        users.map(u => '<option value="' + u + '">' + u + '</option>').join('');
+      sel.value = current;
+    }
+
+    function filtered() {
+      const q = $('search').value.trim().toLowerCase();
+      const u = $('userFilter').value;
+      return todos.filter(t => {
+        const matchesUser = !u || (t.username || '(none)') === u;
+        const hay = ((t.title || '') + ' ' + (t.description || '') + ' ' + (t.username || '')).toLowerCase();
+        return matchesUser && (!q || hay.includes(q));
+      });
+    }
+
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '–';
+      const d = new Date(iso);
+      if (isNaN(d)) return esc(iso);
+      return d.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function render() {
+      const rows = filtered();
+      const tbody = $('tbody');
+      const empty = $('empty');
+      empty.style.display = rows.length ? 'none' : 'block';
+      tbody.innerHTML = rows.map(t => `
+        <tr>
+          <td class="id-cell">#${t.id}</td>
+          <td class="title-cell">${esc(t.title)}</td>
+          <td class="desc-cell" title="${esc(t.description)}">${esc(t.description) || '<span class="muted">—</span>'}</td>
+          <td>${t.completed ? '<span class="badge done">✓ Done</span>' : '<span class="badge pending">● Pending</span>'}</td>
+          <td class="user-cell">${esc(t.username) || '<span class="muted">—</span>'}</td>
+          <td class="muted">${t.user_id ?? '–'}</td>
+          <td class="time-cell">${fmtDate(t.created_at)}</td>
+          <td><button class="del-btn" onclick="deleteTodo(${t.id})">🗑 Delete</button></td>
+        </tr>`).join('');
+
+      const done = todos.filter(t => t.completed).length;
+      $('statTotal').textContent = todos.length;
+      $('statDone').textContent = done;
+      $('statPending').textContent = todos.length - done;
+      $('statUsers').textContent = new Set(todos.map(t => t.username)).size;
+    }
+
+    async function deleteTodo(id) {
+      const t = todos.find(x => x.id === id);
+      if (!confirm('Delete todo #' + id + ' — "' + (t ? t.title : '') + '"? This cannot be undone.')) return;
+      try {
+        const data = await apiAdmin('/api/db/todos/' + id, { method: 'DELETE' });
+        showToast('🗑 Deleted todo #' + id, 'success');
+        fetchTodos(false);
+      } catch (err) {
+        if (err.message !== 'Unauthorized') showToast('⚠️ ' + err.message, 'error');
+      }
+    }
+
+    function refresh(showSpinner) { fetchTodos(showSpinner); }
+
+    function toggleAutoRefresh() {
+      const on = $('autoRefresh').checked;
+      if (on) autoTimer = setInterval(() => fetchTodos(false), 5000);
+      else { clearInterval(autoTimer); autoTimer = null; }
+    }
+
+    // ---------- Init ----------
+    $('loginForm').addEventListener('submit', adminLogin);
+    $('logoutBtn').addEventListener('click', adminLogout);
+
+(async function init() {
+      // If no token in admin key, try the main app's token key
+      if (!token) {
+        const mainToken = localStorage.getItem('taskflow_token');
+        if (mainToken) {
+          try {
+            const payload = JSON.parse(atob(mainToken.split('.')[1]));
+            if (payload.sub && (payload.sub === 'Kumail' || payload.sub === 'Abbas')) {
+              token = mainToken;
+              localStorage.setItem(STORAGE_KEY, token);
+            }
+          } catch (e) { /* not a valid JWT */ }
+        }
+      }
+
+      if (token) {
+        try {
+          // Try to use the existing token by making a test request
+          const data = await apiAdmin('/api/db/todos', { cache: 'no-store' });
+          todos = data || [];
+          // Decode JWT to get the username
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload.sub && (payload.sub === 'Kumail' || payload.sub === 'Abbas')) {
+              $('adminBadge').textContent = 'Admin: ' + payload.sub;
+              loginScreen.classList.add('hidden');
+              dbView.classList.remove('hidden');
+              populateUserFilter();
+              render();
+              return;
+            }
+          } catch (e) { /* fall through */ }
+          adminLogout();
+        } catch (err) {
+          adminLogout();
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

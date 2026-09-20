@@ -1,0 +1,16 @@
+.env
+.venv/
+fastapi_venv/
+__pycache__/
+*.py[cod]
+database/*.db
+database/*.db-*
+logs/
+backups/
+*.log
+iis/*.log
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+frontends/mobile/node_modules/
+frontends/mobile/.expo/

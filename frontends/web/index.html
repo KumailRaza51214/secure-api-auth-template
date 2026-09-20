@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TaskFlow · Todo App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-soft: #eef2ff;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --radius: 16px;
+      --shadow: 0 20px 50px -12px rgba(99, 102, 241, 0.25);
+      color-scheme: light;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      background:
+        radial-gradient(1000px 500px at 10% -10%, rgba(99, 102, 241, 0.35), transparent 60%),
+        radial-gradient(800px 400px at 110% 10%, rgba(16, 185, 129, 0.25), transparent 55%),
+        radial-gradient(700px 500px at 50% 120%, rgba(245, 158, 11, 0.2), transparent 55%),
+        var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 640px;
+      animation: fadeUp 0.45s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      overflow: hidden;
+    }
+
+    /* ---------- Login view ---------- */
+    .login-card { padding: 48px 40px; text-align: center; }
+    .logo {
+      width: 64px; height: 64px;
+      margin: 0 auto 20px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 12px 28px -8px rgba(99, 102, 241, 0.6);
+    }
+    .logo svg { width: 32px; height: 32px; fill: #fff; }
+    .login-card h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+    .login-card p { color: var(--text-muted); margin-top: 8px; margin-bottom: 28px; font-size: 15px; }
+    .field {
+      display: flex; gap: 10px; margin-top: 14px; align-items: center;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text);
+      background: #f8fafc;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      outline: none;
+    }
+    input[type="text"]::placeholder { color: #94a3b8; }
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s, background 0.2s, opacity 0.2s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      box-shadow: 0 10px 22px -8px rgba(99, 102, 241, 0.7);
+    }
+    .btn-primary:hover:not(:disabled) { box-shadow: 0 14px 28px -8px rgba(99, 102, 241, 0.85); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1.5px solid var(--border);
+    }
+    .btn-ghost:hover:not(:disabled) { background: #f8fafc; color: var(--text); }
+.btn-danger {
+      background: #fef2f2;
+      color: var(--danger);
+    }
+    .btn-danger:hover:not(:disabled) { background: #fee2e2; }
+    .btn-admin {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      box-shadow: 0 6px 16px -6px rgba(245, 158, 11, 0.5);
+    }
+    .btn-admin:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-icon {
+      padding: 8px;
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .btn-icon:hover { background: #f1f5f9; color: var(--text); }
+
+    /* ---------- App header ---------- */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 24px;
+      background: linear-gradient(135deg, #fafbff, #f5f6ff);
+      border-bottom: 1px solid var(--border);
+    }
+    .header .brand { display: flex; align-items: center; gap: 12px; }
+    .header .brand .mini-logo {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      display: flex; align-items: center; justify-content: center;
+    }
+    .header .brand .mini-logo svg { width: 20px; height: 20px; fill: #fff; }
+    .header h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+    .header .user { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #34d399, #10b981);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+      text-transform: uppercase;
+    }
+    .username-chip { font-size: 14px; font-weight: 600; color: var(--text); }
+
+    /* ---------- Body / form ---------- */
+    .body { padding: 24px; }
+    .add-form { display: flex; gap: 10px; flex-wrap: wrap; }
+    .add-form input { flex: 1; min-width: 140px; }
+    .add-form .btn { flex-shrink: 0; }
+    .stats {
+      display: flex; gap: 8px; margin: 18px 0 6px;
+      font-size: 13px; color: var(--text-muted);
+    }
+    .stats .pill {
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+
+    /* ---------- Todo list ---------- */
+    .todo-list { margin-top: 14px; }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state .emoji { font-size: 42px; margin-bottom: 10px; display: block; }
+    .empty-state p { font-size: 15px; }
+    .todo-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 10px;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s, transform 0.15s;
+      animation: fadeUp 0.3s ease both;
+    }
+    .todo-item:hover { border-color: #c7d2fe; box-shadow: 0 6px 20px -8px rgba(99, 102, 241, 0.2); }
+    .todo-item.completed { opacity: 0.65; background: #f8fafc; }
+    .todo-item.completed .todo-title { text-decoration: line-through; color: var(--text-muted); }
+
+    .checkbox {
+      flex-shrink: 0;
+      width: 24px; height: 24px;
+      margin-top: 2px;
+      border-radius: 8px;
+      border: 2px solid #cbd5e1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+      background: transparent;
+    }
+    .checkbox:hover { border-color: var(--success); }
+    .checkbox.checked {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    .checkbox.checked svg { display: block; }
+    .checkbox svg { display: none; width: 14px; height: 14px; stroke: #fff; stroke-width: 3; fill: none; }
+
+    .todo-content { flex: 1; min-width: 0; }
+    .todo-title { font-weight: 600; font-size: 15px; word-break: break-word; }
+    .todo-desc { font-size: 13.5px; color: var(--text-muted); margin-top: 3px; word-break: break-word; white-space: pre-wrap; }
+    .todo-meta { font-size: 11.5px; color: #94a3b8; margin-top: 6px; }
+
+    .todo-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    /* ---------- Edit mode ---------- */
+    .edit-form { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .edit-form input { padding: 9px 12px; font-size: 14px; }
+    .edit-actions { display: flex; gap: 8px; }
+    .edit-actions .btn { padding: 8px 14px; font-size: 13.5px; border-radius: 10px; }
+
+    /* ---------- Toast ---------- */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 16px;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.25);
+      font-size: 14px;
+      font-weight: 500;
+      border-left: 4px solid var(--primary);
+      animation: toastIn 0.3s ease both;
+      max-width: 340px;
+    }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    .toast.warning { border-left-color: var(--warning); }
+    .toast.hide { animation: toastOut 0.3s ease both; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(30px); }
+    }
+
+    .loader {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .loader.dark { border-color: rgba(100, 116, 139, 0.3); border-top-color: var(--primary); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 520px) {
+      body { padding: 16px 12px; }
+      .login-card { padding: 36px 24px; }
+      .add-form { flex-direction: column; }
+      .add-form .btn { width: 100%; }
+      .header { flex-wrap: wrap; gap: 10px; }
+      .todo-actions { gap: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Login view -->
+    <div id="loginView" class="card login-card">
+      <div class="logo">
+        <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+      </div>
+      <h1>Welcome to TaskFlow</h1>
+      <p>Enter your name to sign in and manage your tasks.</p>
+      <form id="loginForm" autocomplete="off">
+        <div class="field">
+          <input id="username" type="text" placeholder="Enter your name" maxlength="100" />
+        </div>
+        <div class="field">
+          <button id="loginBtn" class="btn btn-primary" type="submit" style="width:100%">Sign in</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- App view -->
+    <div id="appView" class="card hidden">
+      <div class="header">
+        <div class="brand">
+          <div class="mini-logo">
+            <svg viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          </div>
+          <h2>TaskFlow</h2>
+        </div>
+<div class="user">
+          <span class="username-chip" id="usernameChip"></span>
+          <div class="avatar" id="avatar">?</div>
+          <a id="adminDbBtn" href="/db" class="btn btn-admin hidden" target="_blank" title="Open Database Admin Panel">🔒 Database</a>
+          <button id="logoutBtn" class="btn btn-ghost" title="Sign out">Sign out</button>
+        </div>
+      </div>
+
+      <div class="body">
+        <form id="addForm" class="add-form" autocomplete="off">
+          <input id="title" type="text" placeholder="What needs to be done?" maxlength="100" />
+          <input id="description" type="text" placeholder="Add a description (optional)" maxlength="500" />
+          <button id="addBtn" class="btn btn-primary" type="submit">Add</button>
+        </form>
+
+        <div class="stats">
+          <span class="pill" id="totalCount">0 total</span>
+          <span class="pill" id="pendingCount">0 pending</span>
+          <span class="pill" id="doneCount">0 done</span>
+        </div>
+
+        <div id="todoList" class="todo-list">
+          <div class="empty-state hidden" id="emptyState">
+            <span class="emoji">🎉</span>
+            <p>No tasks yet — add your first one above!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts" class="toast-container"></div>
+
+  <script>
+    'use strict';
+
+    // ---------- State ----------
+    const STORAGE_KEY = 'taskflow_token';
+    let token = localStorage.getItem(STORAGE_KEY) || '';
+    let todos = [];
+
+    // ---------- DOM helpers ----------
+    const $ = (id) => document.getElementById(id);
+    const loginView = $('loginView');
+    const appView = $('appView');
+    const todoListEl = $('todoList');
+    const emptyState = $('emptyState');
+    const avatarEl = $('avatar');
+    const usernameChip = $('usernameChip');
+    let todoSocket = null;
+
+    function applyTodoEvent(event) {
+      if (event.type === 'deleted') {
+        todos = todos.filter(function(todo) { return todo.id !== event.todo_id; });
+      } else if (event.todo) {
+        var index = todos.findIndex(function(todo) { return todo.id === event.todo.id; });
+        if (index === -1) todos.unshift(event.todo);
+        else todos[index] = event.todo;
+      }
+      renderTodos();
+    }
+
+    function connectTodoUpdates() {
+      if (!token) return;
+      if (todoSocket) todoSocket.close();
+      var protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      todoSocket = new WebSocket(protocol + '//' + location.host + '/ws/todos?token=' + encodeURIComponent(token));
+      todoSocket.addEventListener('message', function(event) {
+        try { applyTodoEvent(JSON.parse(event.data)); } catch (e) { /* Ignore malformed events. */ }
+      });
+      todoSocket.addEventListener('close', function() {
+        if (todoSocket !== this) return;
+        todoSocket = null;
+        setTimeout(connectTodoUpdates, 3000);
+      });
+      todoSocket.addEventListener('error', function() {
+        todoSocket?.close();
+      });
+    }
+
+    function showToast(message, type = 'info', duration = 2600) {
+      const container = $('toasts');
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    function setButtonLoading(btn, loading, label) {
+      if (loading) {
+        btn.dataset.label = label;
+        btn.innerHTML = '<span class="loader"></span>';
+        btn.disabled = true;
+      } else {
+        btn.innerHTML = btn.dataset.label || label;
+        btn.disabled = false;
+      }
+    }
+
+    // ---------- API helper with robust error handling ----------
+    async function api(url, options = {}) {
+      const headers = Object.assign({}, options.headers || {});
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+
+      let res;
+      try {
+        res = await fetch(url, Object.assign({}, options, { headers }));
+      } catch (err) {
+        throw new Error('Network error — is the server running?');
+      }
+
+      let data = null;
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try { data = await res.json(); } catch (e) { data = null; }
+      }
+
+      if (!res.ok) {
+        const detail = (data && data.detail) || 'Request failed (' + res.status + ')';
+        if (res.status === 401) {
+          logout(false);
+          showToast('Session expired — please sign in again.', 'warning');
+          return Promise.reject(new Error('Unauthorized'));
+        }
+        throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+      }
+      return data;
+    }
+
+// ---------- Auth ----------
+    function setUsernameUI(username) {
+      usernameChip.textContent = username;
+      avatarEl.textContent = username.charAt(0).toUpperCase();
+      // Show "Database" button only for admins Kumail and Abbas
+      const adminBtn = $('adminDbBtn');
+      if (username === 'Kumail' || username === 'Abbas') {
+        adminBtn.classList.remove('hidden');
+      } else {
+        adminBtn.classList.add('hidden');
+      }
+    }
+
+    function showAppView() {
+      loginView.classList.add('hidden');
+      appView.classList.remove('hidden');
+    }
+
+    function showLoginView() {
+      appView.classList.add('hidden');
+      loginView.classList.remove('hidden');
+    }
+
+    async function login(e) {
+      e.preventDefault();
+      const username = $('username').value.trim();
+      if (!username) {
+        showToast('Please enter your name.', 'warning');
+        return;
+      }
+      const btn = $('loginBtn');
+      setButtonLoading(btn, true, 'Sign in');
+      try {
+        const data = await api('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username })
+        });
+        token = data.access_token;
+        localStorage.setItem(STORAGE_KEY, token);
+        setUsernameUI(data.username);
+        showAppView();
+        connectTodoUpdates();
+        showToast('Welcome, ' + data.username + '!', 'success');
+        await loadTodos();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        setButtonLoading(btn, false, 'Sign in');
+      }
+    }
+
+    function logout(showMessage) {
+      if (showMessage === undefined) showMessage = true;
+      token = '';
+      if (todoSocket) {
+        todoSocket.close();
+        todoSocket = null;
+      }
+      localStorage.removeItem(STORAGE_KEY);
+      todos = [];
+      renderTodos();
+      showLoginView();
+      $('username').value = '';
+      if (showMessage) showToast('Signed out.', 'info');
+    }
+
+    // ---------- Todos ----------
+    async function loadTodos() {
+      try {
+        const data = await api('/todos');
+        todos = data || [];
+        renderTodos();
+      } catch (err) {
+        if (err.message !== 'Unauthorized') showToast(err.message, 'error');
+      }
+    }
+
+    function renderTodos() {
+      todoListEl.innerHTML = '';
+      const completedCount = todos.filter(function(t) { return t.completed; }).length;
+      const pendingCount = todos.length - completedCount;
+      $('totalCount').textContent = todos.length + ' total';
+      $('pendingCount').textContent = pendingCount + ' pending';
+      $('doneCount').textContent = completedCount + ' done';
+
+      if (!todos.length) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      // Sort: pending first, then completed
+      var sorted = todos.slice().sort(function(a, b) {
+        return Number(a.completed) - Number(b.completed);
+      });
+      sorted.forEach(function(todo) {
+        todoListEl.appendChild(createTodoItem(todo));
+      });
+    }
+
+    function formatDate(value) {
+      if (!value) return '';
+      var d = new Date(value);
+      if (isNaN(d.getTime())) return '';
+      var now = new Date();
+      var diff = now - d;
+      var mins = Math.floor(diff / 60000);
+      var hours = Math.floor(diff / 3600000);
+      var days = Math.floor(diff / 86400000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return mins + 'm ago';
+      if (hours < 24) return hours + 'h ago';
+      if (days < 7) return days + 'd ago';
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    function createTodoItem(todo) {
+      var item = document.createElement('div');
+      item.className = 'todo-item' + (todo.completed ? ' completed' : '');
+      item.dataset.id = todo.id;
+
+      var checkbox = document.createElement('button');
+      checkbox.className = 'checkbox' + (todo.completed ? ' checked' : '');
+      checkbox.type = 'button';
+      checkbox.title = todo.completed ? 'Mark as pending' : 'Mark as done';
+      checkbox.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+      checkbox.addEventListener('click', function() { toggleTodo(todo); });
+
+      var content = document.createElement('div');
+      content.className = 'todo-content';
+
+      var title = document.createElement('div');
+      title.className = 'todo-title';
+      title.textContent = todo.title;
+      content.appendChild(title);
+
+      if (todo.description) {
+        var desc = document.createElement('div');
+        desc.className = 'todo-desc';
+        desc.textContent = todo.description;
+        content.appendChild(desc);
+      }
+
+      var meta = document.createElement('div');
+      meta.className = 'todo-meta';
+      meta.textContent = formatDate(todo.created_at);
+      content.appendChild(meta);
+
+      var actions = document.createElement('div');
+      actions.className = 'todo-actions';
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'btn btn-icon';
+      editBtn.type = 'button';
+      editBtn.title = 'Edit';
+      editBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
+      editBtn.addEventListener('click', function() { startEdit(item, todo); });
+
+      var delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-icon';
+      delBtn.type = 'button';
+      delBtn.title = 'Delete';
+      delBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+      delBtn.addEventListener('click', function() { deleteTodo(todo.id); });
+
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+
+      item.appendChild(checkbox);
+      item.appendChild(content);
+      item.appendChild(actions);
+
+      return item;
+    }
+
+    function startEdit(item, todo) {
+      var content = item.querySelector('.todo-content');
+      var actions = item.querySelector('.todo-actions');
+      actions.remove();
+
+      var form = document.createElement('form');
+      form.className = 'edit-form';
+
+      var titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.value = todo.title;
+      titleInput.maxLength = 100;
+
+      var descInput = document.createElement('input');
+      descInput.type = 'text';
+      descInput.value = todo.description || '';
+      descInput.maxLength = 500;
+      descInput.placeholder = 'Description (optional)';
+
+      var editActions = document.createElement('div');
+      editActions.className = 'edit-actions';
+
+      var saveBtn = document.createElement('button');
+      saveBtn.className = 'btn btn-primary';
+      saveBtn.type = 'submit';
+      saveBtn.textContent = 'Save';
+
+      var cancelBtn = document.createElement('button');
+      cancelBtn.className = 'btn btn-ghost';
+      cancelBtn.type = 'button';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.addEventListener('click', function() { renderTodos(); });
+
+      editActions.appendChild(saveBtn);
+      editActions.appendChild(cancelBtn);
+      form.appendChild(titleInput);
+      form.appendChild(descInput);
+      form.appendChild(editActions);
+
+      content.innerHTML = '';
+      content.appendChild(form);
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var newTitle = titleInput.value.trim();
+        var newDesc = descInput.value.trim();
+        if (!newTitle) {
+          showToast('Title cannot be empty.', 'warning');
+          return;
+        }
+        setButtonLoading(saveBtn, true, 'Save');
+        try {
+          var data = await api('/todos/' + todo.id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: newTitle, description: newDesc || null })
+          });
+          todo.title = data.todo.title;
+          todo.description = data.todo.description;
+          renderTodos();
+          showToast('Task updated.', 'success');
+        } catch (err) {
+          showToast(err.message, 'error');
+        } finally {
+          setButtonLoading(saveBtn, false, 'Save');
+        }
+      });
+    }
+
+    async function toggleTodo(todo) {
+      try {
+        var data = await api('/todos/' + todo.id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completed: !todo.completed })
+        });
+        todo.completed = data.todo.completed;
+        renderTodos();
+        showToast(todo.completed ? 'Task completed!' : 'Task marked as pending.', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function deleteTodo(id) {
+      if (!confirm('Delete this task permanently?')) return;
+      try {
+        await api('/todos/' + id, { method: 'DELETE' });
+        todos = todos.filter(function(t) { return t.id !== id; });
+        renderTodos();
+        showToast('Task deleted.', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function addTodo(e) {
+      e.preventDefault();
+      var title = $('title').value.trim();
+      var desc = $('description').value.trim();
+      if (!title) {
+        showToast('Please enter a task title.', 'warning');
+        return;
+      }
+      var btn = $('addBtn');
+      setButtonLoading(btn, true, 'Add');
+      try {
+        var data = await api('/todos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: title, description: desc || null })
+        });
+        $('title').value = '';
+        $('description').value = '';
+        showToast('Task added!', 'success');
+        await loadTodos();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        setButtonLoading(btn, false, 'Add');
+      }
+    }
+
+    // ---------- Event listeners ----------
+    $('loginForm').addEventListener('submit', login);
+    $('addForm').addEventListener('submit', addTodo);
+    $('logoutBtn').addEventListener('click', function() { logout(true); });
+
+    // ---------- Auto-login if token exists ----------
+    (async function init() {
+      if (token) {
+        try {
+          // Verify the stored token by calling the authenticated todos endpoint.
+          const data = await api('/todos');
+          todos = data || [];
+          // Decode the JWT locally to get the username.
+          try {
+            var payload = JSON.parse(atob(token.split('.')[1]));
+            if (payload.sub) {
+              setUsernameUI(payload.sub);
+              showAppView();
+              connectTodoUpdates();
+              renderTodos();
+              return;
+            }
+          } catch (e) { /* fall through */ }
+          logout(false);
+        } catch (err) {
+          // Token is invalid or expired — clear it
+          logout(false);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

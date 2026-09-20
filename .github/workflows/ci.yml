@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Compile Python files
+        run: python -m compileall -q app database main.py migrations
+      - name: Smoke test application import
+        env:
+          USE_LOCAL_SQLITE: "true"
+          SECRET_KEY: ci-only-secret
+        run: python -c "from fastapi.testclient import TestClient; from main import app; assert TestClient(app).get('/docs').status_code == 200"
+      - name: Build Docker image
+        run: docker build --tag taskflow-api:ci .
+      - name: Run Docker smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --detach --name taskflow-api-ci --publish 8000:8000 \
+            --env USE_LOCAL_SQLITE=true \
+            --env SECRET_KEY=ci-only-secret \
+            taskflow-api:ci
+          trap 'docker logs taskflow-api-ci; docker rm --force taskflow-api-ci' EXIT
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Container did not become healthy in time."
+          exit 1

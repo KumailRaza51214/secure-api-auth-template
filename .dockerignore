@@ -1,0 +1,13 @@
+.env
+.git
+.gitignore
+.venv
+fastapi_venv
+__pycache__
+*.pyc
+backups
+logs
+database/*.db
+database/*.db-*
+frontends/mobile/node_modules
+todo-mobile
