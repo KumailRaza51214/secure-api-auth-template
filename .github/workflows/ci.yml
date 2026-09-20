@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -24,19 +24,24 @@ jobs:
       - name: Build Docker image
         run: docker build --tag taskflow-api:ci .
       - name: Run Docker smoke test
-        shell: bash
+        shell: powershell
         run: |
-          set -euo pipefail
-          docker run --detach --name taskflow-api-ci --publish 8000:8000 \
-            --env USE_LOCAL_SQLITE=true \
-            --env SECRET_KEY=ci-only-secret \
+          $ErrorActionPreference = "Stop"
+          docker rm --force taskflow-api-ci 2>$null
+          docker run --detach --name taskflow-api-ci --publish 18000:8000 `
+            --env USE_LOCAL_SQLITE=true `
+            --env SECRET_KEY=ci-only-secret `
             taskflow-api:ci
-          trap 'docker logs taskflow-api-ci; docker rm --force taskflow-api-ci' EXIT
-          for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:8000/health; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Container did not become healthy in time."
-          exit 1
+          try {
+            for ($attempt = 1; $attempt -le 30; $attempt++) {
+              try {
+                $response = Invoke-WebRequest -Uri "http://127.0.0.1:18000/health" -UseBasicParsing
+                if ($response.StatusCode -eq 200) { exit 0 }
+              } catch { }
+              Start-Sleep -Seconds 2
+            }
+            throw "Container did not become healthy in time."
+          } finally {
+            docker logs taskflow-api-ci
+            docker rm --force taskflow-api-ci
+          }
